@@ -1,0 +1,14 @@
+# .gitignore
+# Ignorar dados de notebooks e volumes
+meus_projetos/
+workspace/
+.ipynb_checkpoints/
+
+# Ignorar arquivos temporários do sistema
+__pycache__/
+*.pyc
+.DS_Store
+
+# Ignorar histórico do Jupyter
+.jupyter/
+.local/

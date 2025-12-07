@@ -1,0 +1,26 @@
+services:
+  jupyter-lab:
+    image: pytorch-gfx803:final
+    container_name: jupyter_rocm
+    restart: unless-stopped
+    
+    # --- HARDWARE & KERNEL (Isso o Dockerfile NÃO controla) ---
+    devices:
+      - "/dev/kfd:/dev/kfd"
+      - "/dev/dri:/dev/dri"
+    group_add:
+      - video
+      - render
+    
+    # Crítico para PyTorch não travar
+    shm_size: '8gb'
+    
+    # --- REDE & ARMAZENAMENTO ---
+    ports:
+      - "8888:8888"
+    
+    volumes:
+      - ./projects:/workspace
+
+    # NOTA: Removemos 'environment' e 'command' pois a imagem
+    # já possui essas configurações nativamente.

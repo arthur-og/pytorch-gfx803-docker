@@ -1,0 +1,52 @@
+# Dockerfile.Part1
+# Foco: Preparar sistema, apt, git e clonar repositórios
+
+FROM rocm/pytorch:rocm5.7_ubuntu22.04_py3.10_pytorch_2.0.1
+
+# 1. Variáveis de Ambiente (Mantidas iguais)
+ENV PORT=8188 \
+    DEBUG=0 \
+    USE_DEBUG=0 \
+    CMAKE_BUILD_TYPE=Release \
+    BUILD_TEST=0 \
+    BUILD_CAFFE2=0 \
+    USE_LMDB=0 \
+    USE_LEVELDB=0 \
+    USE_OPENCV=0 \
+    USE_REDIS=0 \
+    MAX_JOBS=2 \
+    CMAKE_BUILD_PARALLEL_LEVEL=2 \
+    HSA_OVERRIDE_GFX_VERSION=8.0.3 \
+    PYTORCH_ROCM_ARCH=gfx803 \
+    ROCM_ARCH=gfx803 \
+    TORCH_BLAS_PREFER_HIPBLASLT=0 \
+    ROC_ENABLE_PRE_VEGA=1 \
+    USE_CUDA=0 \
+    USE_ROCM=1 \
+    USE_NINJA=1 \
+    FORCE_CUDA=1 \
+    # Definindo versões fixas para garantir que o git clone funcione
+    PYTORCH_GIT_VERSION="release/2.3" \
+    TORCH_GIT_VERSION="release/0.18" \
+    DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1
+
+# 2. Instalações do Sistema (APT)
+# DICA: Adicionei 'htop' e 'nano' para ajudar no debug se precisar entrar no container
+RUN apt-get -y update && \
+    apt-get install -y --no-install-recommends \
+    ffmpeg virtualenv google-perftools tmux mc pigz git ninja-build \
+    htop nano build-essential \
+    libjpeg-dev zlib1g-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# 3. Preparação Python Básica e Ferramentas de Build
+RUN pip install --upgrade pip wheel setuptools && \
+    pip install cmake mkl mkl-include ninja
+
+# 4. Clonar Repositórios (Isso demora, então fazemos agora para cachear)
+WORKDIR /
+RUN git clone --recursive https://github.com/pytorch/pytorch.git -b ${PYTORCH_GIT_VERSION} /pytorch && \
+    git clone https://github.com/pytorch/vision.git -b ${TORCH_GIT_VERSION} /vision
+
+CMD ["/bin/bash"]

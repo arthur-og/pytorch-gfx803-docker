@@ -1,0 +1,40 @@
+# Dockerfile.Part2
+# Foco: Instalar requirements e Compilar
+
+FROM pytorch-gfx803:part1
+
+WORKDIR /pytorch
+
+# 1. Instalação Manual de Dependências Críticas
+# Instalamos numpy e pyyaml antes. Eles são os culpados usuais por travamentos.
+# Usamos --upgrade --ignore-installed para garantir que pegamos binários se possível.
+RUN pip install --no-cache-dir --upgrade numpy pyyaml typing_extensions requests
+
+# 2. Instalar o resto do requirements.txt
+# Se isso falhar, você saberá exatamente qual pacote é, pois os grandes já foram.
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 3. Preparar script de build AMD
+RUN python3 tools/amd_build/build_amd.py
+
+# 4. Compilação do PyTorch
+# ENV MAX_JOBS é crítico aqui.
+RUN echo "** BUILDING PYTORCH **" && \
+    MAX_JOBS=2 python3 setup.py bdist_wheel && \
+    pip install dist/torch*-cp310-cp310-linux_x86_64.whl
+
+# 5. Limpeza PyTorch (Para liberar espaço para o Torchvision)
+# Se você tiver pouco espaço em disco, descomente a linha abaixo:
+# RUN rm -rf /pytorch/build
+
+# 6. Compilação do Torchvision
+WORKDIR /vision
+RUN echo "** BUILDING TORCHVISION **" && \
+    MAX_JOBS=2 python3 setup.py bdist_wheel && \
+    pip install dist/torchvision-*-cp310-cp310-linux_x86_64.whl
+
+# Limpeza final
+WORKDIR /
+# RUN rm -rf /pytorch /vision
+
+CMD ["/bin/bash"]
