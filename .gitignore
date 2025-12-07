@@ -1,6 +1,6 @@
 # .gitignore
 # Ignorar dados de notebooks e volumes
-meus_projetos/
+projects/
 workspace/
 .ipynb_checkpoints/
 
